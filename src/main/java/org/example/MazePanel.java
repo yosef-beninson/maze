@@ -12,12 +12,13 @@ public class MazePanel extends JPanel {
     private int currentStep = 0;
     private Timer animationTimer;
 
-    private Color wallColor,pathColor,gridColor,solutionColor;
+    private Color wallColor, pathColor, gridColor, solutionColor;
     private boolean drawGrid;
 
-    private int CELL_SIZE;
+    private int row, column;
+    private int CELL_SIZE, startX, startY,mazePixelWidth,mazePixelHeight;
 
-    public MazePanel(){
+    public MazePanel() {
         setBackground(Color.LIGHT_GRAY);
         setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
     }
@@ -33,21 +34,30 @@ public class MazePanel extends JPanel {
         solutionColor = config.getPathColor();
         drawGrid = config.getDrawGrid();
 
-        int maxAvailableWidth = (int) (getParent().getWidth() * 0.90);
-        int maxAvailableHeight = (int) (getParent().getHeight() * 0.90);
+        this.column = mazeMap[0].length;
+        this.row = mazeMap.length;
 
-        int calculatedWidth = maxAvailableWidth / config.getWidth();
-        int calculatedHeight = maxAvailableHeight / config.getHeight();
+        updateDiminutions();
+
+        revalidate();
+        repaint();
+    }
+
+    private void updateDiminutions() {
+        int maxAvailableWidth = (int) (getWidth() * 0.95);
+        int maxAvailableHeight = (int) (getHeight() * 0.95);
+
+        int calculatedWidth = maxAvailableWidth / column;
+        int calculatedHeight = maxAvailableHeight / row;
 
         this.CELL_SIZE = Math.min(calculatedWidth, calculatedHeight);
         CELL_SIZE = Math.max(CELL_SIZE, 1);
 
-        int width = mazeMap[0].length * CELL_SIZE;
-        int height = mazeMap.length * CELL_SIZE;
-        setPreferredSize(new Dimension(width, height));
+        mazePixelWidth = column * CELL_SIZE;
+        mazePixelHeight = row * CELL_SIZE;
 
-        revalidate();
-        repaint();
+        startX = (getWidth() - mazePixelWidth) / 2;
+        startY = (getHeight() - mazePixelHeight) / 2;
     }
 
 
@@ -63,14 +73,22 @@ public class MazePanel extends JPanel {
             animationTimer.stop();
         }
     }
+
     public void resumeAnimation(Runnable onAnimationComplete) {
         if (solutionPath == null || currentStep >= solutionPath.size()) return;
         animate(onAnimationComplete);
     }
 
-    private void animate(Runnable onAnimationComplete){
-        int delay =config.getAnimationDelayMs();
-//        delay=0;
+    public void clearSolution() {
+        stopAnimation();
+        this.solutionPath = null;
+        this.currentStep = 0;
+        repaint();
+    }
+
+    private void animate(Runnable onAnimationComplete) {
+        int delay = config.getAnimationDelayMs();
+        delay = 0;
 
         animationTimer = new Timer(delay, e -> {
             currentStep++;
@@ -85,13 +103,6 @@ public class MazePanel extends JPanel {
         animationTimer.start();
     }
 
-    public void clearSolution() {
-        stopAnimation();
-        this.solutionPath = null;
-        this.currentStep = 0;
-        repaint();
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -100,20 +111,16 @@ public class MazePanel extends JPanel {
 
         long start = System.nanoTime();
 
-        int cols = mazeMap[0].length;
-        int rows = mazeMap.length;
-        int mazePixelWidth = cols * CELL_SIZE;
-        int mazePixelHeight = rows * CELL_SIZE;
+        updateDiminutions();
 
-        int startX = (getWidth() - mazePixelWidth) / 2;
-        int startY = (getHeight() - mazePixelHeight) / 2;
+        System.out.println("width: " + getWidth() + " height: " + getHeight());
 
         g.setColor(pathColor);
         g.fillRect(startX, startY, mazePixelWidth, mazePixelHeight);
 
         g.setColor(wallColor);
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
+        for (int r = 0; r < row; r++) {
+            for (int c = 0; c < column; c++) {
                 if (mazeMap[r][c] == 1) {
                     int x = startX + (c * CELL_SIZE);
                     int y = startY + (r * CELL_SIZE);
@@ -136,12 +143,12 @@ public class MazePanel extends JPanel {
         if (drawGrid) {
             g.setColor(gridColor);
 
-            for (int r = 0; r <= rows; r++) {
+            for (int r = 0; r <= row; r++) {
                 int y = startY + (r * CELL_SIZE);
                 g.drawLine(startX, y, startX + mazePixelWidth, y);
             }
 
-            for (int c = 0; c <= cols; c++) {
+            for (int c = 0; c <= column; c++) {
                 int x = startX + (c * CELL_SIZE);
                 g.drawLine(x, startY, x, startY + mazePixelHeight);
             }

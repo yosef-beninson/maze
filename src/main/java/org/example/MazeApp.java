@@ -20,17 +20,19 @@ public class MazeApp extends JFrame {
     private JButton checkSolutionBtn, actionBtn, refreshConfigBtn, getMazeBtn;
 
     private final MazePanel mazeDisplayArea = new MazePanel();
-    private MazeConfig config = new MazeConfig();
+    private MazeConfig config;
 
     private MazeSolver solver;
     private short[][] mazeMap;
 
     public MazeApp() {
-
         setTitle("Maze Solver");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 600);
         setLayout(new BorderLayout());
+        setMinimumSize(new Dimension(300,300));
+
+        config = new MazeConfig();
 
         JPanel controlPanel = makeControlPanel();
 
@@ -38,7 +40,6 @@ public class MazeApp extends JFrame {
         add(mazeDisplayArea, BorderLayout.CENTER);
 
         setVisible(true);
-
     }
 
 
@@ -196,8 +197,8 @@ public class MazeApp extends JFrame {
                             actionBtn.setVisible(false);
 
                             checkSolutionBtn.setEnabled(true);
-                            mapMaze(mazeImage);
-                            solver = new MazeSolver(mazeMap, config.getHeight(), config.getWidth());
+                            mapMaze(mazeImage,userWidth,userHeight);
+                            solver = new MazeSolver(mazeMap, userHeight, userWidth);
                         });
                     }
                 }).start();
@@ -248,7 +249,7 @@ public class MazeApp extends JFrame {
                 .thenApply(HttpResponse::body)
                 .thenAccept(s -> {
                     Gson gson = new Gson();
-                    config = gson.fromJson(s, MazeConfig.class);
+                    this.config = gson.fromJson(s, MazeConfig.class);
 
                     SwingUtilities.invokeLater(() -> {
                         wallColorLabel.setForeground(config.getWallCellColor());
@@ -277,9 +278,7 @@ public class MazeApp extends JFrame {
         if (userInput < 5 || userInput > 100) return 30;
         return userInput;
     }
-    private void mapMaze(BufferedImage mazeImg) {
-        int mazeWidth = config.getWidth();
-        int mazeHeight = config.getHeight();
+    private void mapMaze(BufferedImage mazeImg, int mazeWidth, int mazeHeight) {
         int cellWidth = mazeImg.getWidth() / mazeWidth;
         int cellHeight = mazeImg.getHeight() / mazeHeight;
         short[][] mazeMap = new short[mazeHeight][mazeWidth];
@@ -298,7 +297,4 @@ public class MazeApp extends JFrame {
         this.mazeMap = mazeMap;
         mazeDisplayArea.setMazeData(mazeMap, config);
     }
-
-
-
 }

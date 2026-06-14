@@ -15,7 +15,7 @@ public class MazeSolver {
         this.map = map;
         this.rows = rows;
         this.columns = columns;
-        new Thread(this::solve).start();
+        solve();
     }
 
     public void solve() {
